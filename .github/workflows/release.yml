@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check versions
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -q "^version = \"$VERSION\"" gdpatch_mod.toml || { echo "::error::gdpatch_mod.toml version is not $VERSION"; exit 1; }
+
+      - name: Package
+        run: |
+          mkdir -p dist/avast_core
+          cp -r gdpatch_mod.toml patcher.lua data icon.png banner.png README.md dist/avast_core/
+          (cd dist && zip -qr ../avast_core.zip avast_core)
+
+      # Not marked as a pre-release on purpose: installers download releases/latest,
+      # which skips pre-releases.
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            avast_core.zip

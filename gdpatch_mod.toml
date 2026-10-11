@@ -1,0 +1,65 @@
+# AVaSt Core: the in-game side of AVaSt. Needs avast_api.
+id = "avast_core"
+
+[meta]
+name = "AVaSt Core"
+version = "0.2.0"
+authors = ["malidev"]
+description = "Mod manager, updates, crash reports and debug tools for AVaSt."
+website = "https://github.com/avast-mod/core"
+
+[avast]
+categories = ["tools"]
+api = "0.1.1-beta"
+dependencies = ["avast_api"]
+tags = ["avast", "tools"]
+links = { source = "https://github.com/avast-mod/core", docs = "https://github.com/avast-mod/docs" }
+
+[avast.update]
+github = "avast-mod/core"
+asset = "avast_core.zip"
+
+[config.updates]
+meta.description = "Mod updates"
+
+[config.updates.check]
+name = "Check for updates"
+description = "Look for new versions of AVaSt and your mods when the game starts."
+type = "boolean"
+default = true
+
+[config.updates.auto_install]
+name = "Install updates automatically"
+description = "Download and install updates without asking. They apply the next time the game starts."
+type = "boolean"
+default = false
+
+[config.store]
+meta.description = "The AVaSt mod server (Featured and Discover)"
+
+[config.store.url]
+name = "Server address"
+description = "The AVaSt API the Featured and Discover pages get mods from. Empty turns them off."
+type = "string"
+default = "https://avast.malidev.zip/api"
+
+[config.debug]
+meta.description = "Crash reports and debugging"
+
+[config.debug.error_popups]
+name = "Error popups"
+description = "Show a window with details when a script error happens."
+type = "boolean"
+default = true
+
+[config.debug.call_stacks]
+name = "Script call stacks"
+description = "Record which functions led to an error. Costs a little performance. Takes effect after a restart."
+type = "boolean"
+default = true
+
+[config.debug.upload_url]
+name = "Log upload service"
+description = "Where the Upload button sends logs. Leave empty to hide the button."
+type = "string"
+default = "https://paste.rs"

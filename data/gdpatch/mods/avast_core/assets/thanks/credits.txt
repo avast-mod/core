@@ -1,0 +1,59 @@
+# [wave]AVaSt
+[italic]Core {avast_core}, API {avast_api}
+[italic]https://github.com/avast-mod
+Mods for Antivirus Survivors 2003 Professional
+
+# [wave]MANAGED AND CODE
+malidev (malithedeveloper)
+[italic]backend, frontend, api etc..
+
+# [wave]INGAME UI DESIGN
+grace (block_618)
+[italic]drafted the in-game AVaSt menus
+https://block-618.zip
+
+# [wave]WEBSITE DESIGN
+MondySpartan
+https://x.com/tehmondspartan
+[italic]the installer's look is based on it too
+
+# [wave]FONTS
+Fira Sans Compressed Heavy Italic
+[italic]the font for AVaSt logo in this screen
+Mozilla, bBox Type and Carrois, SIL OFL 1.1
+
+fs Tahoma 8px by ETHproductions
+[italic]all the pixel text, CC BY-SA 3.0
+
+# [wave]THANKS TO
+grace (block_618)
+MondySpartan
+[italic]for helping designs in the project
+
+Nicole (elocindev)
+riccc (mocclers)
+jstnck (jst_nck)
+[italic]for helping giving me some ideas
+
+iisshaun
+Shaun Hammond Business Solutions
+[italic]for making the game and for the help along the way
+
+[wave]and lastly... every GitHub contributor
+
+# [wave]A NOTE
+[italic]AI helped with this project. Some parts were made by AI outright, so I could make good use of my time.
+[italic]Some parts still have rough edges. With the help of contributors, they will be fixed in coming versions.
+
+Found a bug? Report it on the Discord server or on GitHub. That supports the project too.
+
+
+[big][rainbow][wave]Thank you for using AVaSt
+[big][rainbow][wave]<3
+
+
+> Thank you for using AVaSt
+> https://github.com/avast-mod
+> greetings to grace, MondySpartan, Nicole, riccc, jstnck and iisshaun
+> this is my first big project and im happy with the result :D
+> you can press "esc" to close this menu instead using buttons
