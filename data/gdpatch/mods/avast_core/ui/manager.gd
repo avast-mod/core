@@ -853,7 +853,7 @@ func _installed_row(info) -> Button:
 	var line: HBoxContainer = row.get_node("Row")
 	if _core.updater.available.has(info.id):
 		var update := _icon(load(_UPDATE_ICON), 11)
-		update.tooltip_text = "Update to " + str(_core.updater.available[info.id].version)
+		update.tooltip_text = ("Bug fix for " if _core.updater.available[info.id].get("fix", false) else "Update to ") + str(_core.updater.available[info.id].version)
 		update.mouse_filter = Control.MOUSE_FILTER_PASS
 		line.add_child(update)
 	elif not _core.mods.problems(info.id).is_empty() and not disabled:
@@ -1560,7 +1560,9 @@ func _show_update(id: String) -> void:
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.alignment = BoxContainer.ALIGNMENT_CENTER
 	words.add_theme_constant_override("separation", 2)
-	var title := _label("Updated to %s" % shown.version if finished else "Update available", false)
+	var fix: bool = shown.get("fix", false)
+	var title_text: String = ("Updated to %s" % shown.version) + (" (bug fix)" if fix else "") if finished else ("Bug fix available" if fix else "Update available")
+	var title := _label(title_text, false)
 	title.theme_type_variation = &"GroupTitle"
 	title.add_theme_font_override("font", load(_HEADING_FONT))
 	title.add_theme_font_size_override("font_size", 13)
@@ -1846,19 +1848,18 @@ func _download_progress(entry: Dictionary, width: int) -> Control:
 	var bar := Marquee.new(width, 16)
 	bar.value = float(entry.get("fraction", 0.0)) if total > 0 else -1.0
 	box.add_child(bar)
-	var parts: Array[String] = []
-	if total > 0:
-		parts.append("%d%%" % int(bar.value * 100))
-		parts.append("%s of %s" % [_core.store.size_text(bytes), _core.store.size_text(total)])
-	else:
-		parts.append("Downloading %s" % _core.store.size_text(bytes))
+	var amount: String = "%s of %s (%d%%)" % [_core.store.size_text(bytes), _core.store.size_text(total), int(bar.value * 100)] if total > 0 \
+		else "Downloading %s" % _core.store.size_text(bytes)
+	var rate := "Connecting..."
 	if speed > 0:
-		parts.append("%s/s" % _core.store.size_text(int(speed)))
+		rate = "%s/s" % _core.store.size_text(int(speed))
 		if total > 0:
-			parts.append("%s left" % _duration((total - bytes) / speed))
-	else:
-		parts.append("Connecting...")
-	box.add_child(_label(", ".join(parts), false))
+			rate += ", %s left" % _duration((total - bytes) / speed)
+	for text in [amount, rate]:
+		var line := _label(text, false)
+		line.clip_text = true
+		line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		box.add_child(line)
 	return box
 
 static func _duration(seconds: float) -> String:

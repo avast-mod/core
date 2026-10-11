@@ -12,7 +12,12 @@
 #
 # a mod opts in with [avast.update] in its gdpatch_mod.toml:
 #   github = "owner/repo"   latest github release, asset = "my_mod.zip" (default <id>.zip)
-#   url = "https://.../latest.json"   {"version": "1.2.0", "url": "<zip>", "notes": "..."}
+#   url = "https://.../latest.json"   {"version": "1.2.0", "url": "<zip>", "notes": "...", "build": "..."}
+#
+# bug fix updates keep the same version. re-publish the github release on the same tag (new zip,
+# so a new asset id) or change "build" in latest.json, and it shows up as 0.2.2 -> 0.2.2.
+# builds.json remembers which build is installed. a mod we never installed ourselves just gets
+# the current build written down the first time, theres no way to know any better
 #
 # GDPatch keeps every mod file open while the game runs so we cant overwrite anything in place.
 # old files get moved to GDPatch/avast/updates/trash, new ones land where they were, and the update
@@ -40,6 +45,7 @@ var checking := false
 var _core: Node
 var _dir := ""
 var _cache := {}
+var _builds := {}
 
 func setup(core: Node, avast_dir: String) -> void:
 	_core = core
@@ -49,6 +55,9 @@ func setup(core: Node, avast_dir: String) -> void:
 	var text := _read(_dir.path_join("cache.json"))
 	var cache: Variant = JSON.parse_string(text) if not text.is_empty() else null
 	_cache = cache if cache is Dictionary else {}
+	var builds_text := _read(_dir.path_join("builds.json"))
+	var builds: Variant = JSON.parse_string(builds_text) if not builds_text.is_empty() else null
+	_builds = builds if builds is Dictionary else {}
 
 func check(force: bool = false) -> void:
 	if checking:
@@ -67,8 +76,13 @@ func check(force: bool = false) -> void:
 		if latest.has("error"):
 			status[info.id] = latest.error
 			status_changed.emit(info.id)
-		elif latest.has("version") and Version.compare(latest.version, info.version) > 0 and Safety.is_secure_url(str(latest.get("url", ""))):
-			available[info.id] = latest
+		elif latest.has("version") and Safety.is_secure_url(str(latest.get("url", ""))):
+			var newer := Version.compare(latest.version, info.version)
+			var build := str(latest.get("build", "")).trim_suffix(".0")
+			if newer == 0 and not build.is_empty() and not _builds.has(info.id):
+				_builds[info.id] = build
+			if newer > 0 or (newer == 0 and not build.is_empty() and str(_builds.get(info.id, build)).trim_suffix(".0") != build):
+				available[info.id] = latest.merged({"fix": newer == 0})
 	var store_latest: Dictionary = await _core.store.latest(from_store)
 	for id in store_latest:
 		var info = _core.library.info(id)
@@ -79,6 +93,7 @@ func check(force: bool = false) -> void:
 	var file := FileAccess.open(_dir.path_join("cache.json"), FileAccess.WRITE)
 	file.store_string(JSON.stringify(_cache, "\t"))
 	file.close()
+	_save_builds()
 	_core.info("updates: %d available%s" % [available.size(), (": " + ", ".join(available.keys().map(func(k: String) -> String: return "%s %s" % [k, available[k].version]))) if not available.is_empty() else ""])
 	checking = false
 	checked.emit()
@@ -94,7 +109,16 @@ func install(id: String) -> bool:
 		return false
 	installed_updates[id] = update
 	available.erase(id)
+	if not str(update.get("build", "")).is_empty():
+		_builds[id] = str(update.build)
+		_save_builds()
 	return true
+
+func _save_builds() -> void:
+	var file := FileAccess.open(_dir.path_join("builds.json"), FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify(_builds, "\t"))
+		file.close()
 
 func install_all() -> int:
 	var done := 0
@@ -134,15 +158,18 @@ func _latest(info, force: bool) -> Dictionary:
 			return {"error": "GitHub sent an unexpected answer."}
 		var asset_name := str(source.get("asset", info.id + ".zip"))
 		var url := ""
+		var build := ""
 		for asset in data.get("assets", []):
 			if asset.get("name") == asset_name:
 				url = asset.get("browser_download_url", "")
+				build = str(int(asset.get("id", 0)))
 		result = {
 			"version": str(data.get("tag_name", "")).trim_prefix("v"),
 			"url": url,
 			"notes": str(data.get("body", "")),
 			"page": str(data.get("html_url", "")),
 			"etag": response.headers.get("etag", ""),
+			"build": build,
 		}
 	elif source.has("url"):
 		if not Safety.is_secure_url(str(source.url)):
@@ -156,6 +183,7 @@ func _latest(info, force: bool) -> Dictionary:
 			"url": str(data.get("url", "")),
 			"notes": str(data.get("notes", data.get("changelog", ""))),
 			"page": str(data.get("page", "")),
+			"build": str(data.get("build", "")),
 		}
 	else:
 		return {}

@@ -14,7 +14,9 @@
 # so: A over avast ui sends a real left click (skipped when the games cursor is already on one of
 # its own buttons, or it would click twice), right stick scrolls, and while an overlay is open
 # (game paused, its cursor frozen) the left stick and dpad move the mouse.
-# a text field that gets focus from A, or anything on a steam deck, opens steams floating keyboard
+# a text field that gets focus from A, or anything on a steam deck, opens steams floating keyboard.
+# also turns off godots right click menu on our text fields, it draws over the games cursor
+# and doesnt look like the game at all. ctrl+c and ctrl+v still work
 
 extends Node
 
@@ -32,6 +34,7 @@ var _deck := OS.get_environment("SteamDeck") == "1"
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_viewport().gui_focus_changed.connect(_on_focus)
+	get_tree().node_added.connect(_on_node_added)
 
 func _input(event: InputEvent) -> void:
 	if not event is InputEventJoypadButton or event.button_index != JOY_BUTTON_A:
@@ -81,10 +84,14 @@ func _game_cursor_busy() -> bool:
 
 func _ours(node: Node) -> bool:
 	while node != null:
-		if node.is_in_group(&"avast_ui") or Overlay._stack.has(node):
+		if node.is_in_group(&"avast_ui") or (node is CanvasLayer and Overlay._stack.has(node)):
 			return true
 		node = node.get_parent()
 	return false
+
+func _on_node_added(node: Node) -> void:
+	if (node is LineEdit or node is TextEdit) and _ours(node):
+		node.context_menu_enabled = false
 
 func _on_focus(control: Control) -> void:
 	if not (control is LineEdit or control is TextEdit) or not _ours(control):

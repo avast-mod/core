@@ -3,7 +3,7 @@ id = "avast_core"
 
 [meta]
 name = "AVaSt Core"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["malidev"]
 description = "Mod manager, updates, crash reports and debug tools for AVaSt."
 website = "https://github.com/avast-mod/core"
