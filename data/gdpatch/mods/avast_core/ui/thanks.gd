@@ -210,6 +210,8 @@ func _place_window(open: float) -> void:
 	var height := maxf(2.0, roundf(_SIZE.y * open / 2.0) * 2.0)
 	_reveal.position = (Vector2((screen.x - _SIZE.x) / 2, (screen.y - height) / 2)).round()
 	_reveal.size = Vector2(_SIZE.x, height)
+	_reveal.pivot_offset = _reveal.size / 2
+	_reveal.scale = Vector2.ONE * screen_fit(_SIZE)
 	_frame.position = Vector2(0, round(-(_SIZE.y - height) / 2))
 
 func _animate_letter(i: int, frame_time: float, all_burn: float) -> void:

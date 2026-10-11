@@ -26,6 +26,7 @@ const StatsOverlay := preload("res://gdpatch/mods/avast_core/ui/stats_overlay.gd
 const Link := preload("res://gdpatch/mods/avast_core/link.gd")
 const Demo := preload("res://gdpatch/mods/avast_core/demo.gd")
 const Gamepad := preload("res://gdpatch/mods/avast_core/gamepad.gd")
+const Overlay := preload("res://gdpatch/mods/avast_core/ui/overlay.gd")
 
 const _QUESTION_ICON := "res://assets/icons/info24.png"
 
@@ -52,6 +53,10 @@ func _ready() -> void:
 	reporter.start()
 	reporter.capture.on_error = _on_error
 	add_child(Gamepad.new())
+	get_viewport().size_changed.connect(_fit_manager)
+	var game_settings: Node = Game.autoload("Settings")
+	if game_settings != null and game_settings.has_signal("settings_changed"):
+		game_settings.settings_changed.connect(func() -> void: _fit_manager.call_deferred())
 	updater = Updater.new()
 	updater.name = "Updater"
 	add_child(updater)
@@ -84,6 +89,15 @@ func open_manager() -> void:
 		_manager_view = Manager.new(self)
 		_manager_view.add_to_group(&"avast_ui")
 		_manager = windows.open(_manager_view, "AVaSt", Manager.SIZE, Callable(), 0)
+		_fit_manager.call_deferred()
+
+func _fit_manager() -> void:
+	if not is_instance_valid(_manager) or _manager.get_child_count() == 0:
+		return
+	var window: Control = _manager.get_child(0)
+	var size: Vector2 = window.size if window.size != Vector2.ZERO else Manager.SIZE
+	window.pivot_offset = size / 2
+	window.scale = Vector2.ONE * Overlay.screen_fit(size, Vector2(16, 46))
 
 func can_show_mods() -> bool:
 	return Game.main_menu() != null

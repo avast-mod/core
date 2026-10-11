@@ -102,6 +102,9 @@ func _input(event: InputEvent) -> void:
 		close()
 
 func _process(_delta: float) -> void:
+	if window != null:
+		window.pivot_offset = window.size / 2
+		window.scale = Vector2.ONE * screen_fit(window.size)
 	var top: bool = not _stack.is_empty() and _stack.back() == self
 	_pointer.visible = top and not _headless()
 	_pointer_shadow.visible = _pointer.visible
@@ -222,6 +225,16 @@ static func _centre_desktop() -> bool:
 
 static func _headless() -> bool:
 	return DisplayServer.get_name() == "headless"
+
+static func screen_fit(size: Vector2, reserve := Vector2(16, 16)) -> float:
+	var tree := Engine.get_main_loop() as SceneTree
+	var room: Vector2 = tree.root.get_visible_rect().size - reserve
+	var scaler: Node = Game.autoload("ExpandIntScaler")
+	var screen: int = maxi(1, int(scaler.get("chosen_scale"))) if scaler != null and scaler.get("chosen_scale") != null else 1
+	var steps := screen
+	while steps > 1 and (size.x * steps / screen > room.x or size.y * steps / screen > room.y):
+		steps -= 1
+	return float(steps) / screen
 
 func _make_pointer() -> TextureRect:
 	var pointer := TextureRect.new()

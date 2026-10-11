@@ -45,6 +45,7 @@ const _VIEWS := [
 const _RELOAD_ICON := "res://assets/icons/refreshrate-export 24.png"
 const _UPDATE_ICON := "res://assets/icons/levelup32.png"
 const _WARNING_ICON := "res://scenes/game_object/enemies/wizard_enemy/critical-24.png"
+const _CAUTION_ICON := "res://scenes/game_object/enemies/wizard_enemy/warning trial-export-export.png"
 const _OFFLINE_ICON := "res://scenes/game_object/enemies/basic_enemy/errortrial-export 24.png"
 const _INFO_ICON := "res://assets/icons/info24.png"
 const _DOWNLOADS_ICON := "res://assets/icons/vapidshare24.png"
@@ -822,7 +823,7 @@ func _side_label(text: String, picked: bool) -> Label:
 
 func _checkbox(checked: bool, enabled: bool, on_click: Callable, tip: String) -> Control:
 	if not enabled:
-		var fixed := _icon(AppearanceManager.checkbox_texture(checked), 11)
+		var fixed := _icon(AppearanceManager.checkbox_texture(checked), 13)
 		fixed.modulate.a = 0.5
 		fixed.tooltip_text = tip
 		fixed.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -1277,11 +1278,21 @@ func _spacer() -> Control:
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return spacer
 
-func _status_line(text: String, color: Color = Color(0, 0, 0, 0)) -> void:
+func _status_line(text: String, color: Color = Color(0, 0, 0, 0), icon: Texture2D = null) -> void:
 	var line := _label(text)
 	if color.a > 0:
 		line.add_theme_color_override("font_color", color)
-	_info.add_child(line)
+	if icon == null:
+		_info.add_child(line)
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	var mark := _icon(icon, 12)
+	mark.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(mark)
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(line)
+	_info.add_child(row)
 
 func _show_installed(info) -> void:
 	if info == null:
@@ -1302,9 +1313,9 @@ func _show_installed(info) -> void:
 	var warn := Palette.readable(Color(0.75, 0.1, 0.1), _pal)
 	if not disabled and not removed:
 		for problem in _core.mods.problems(id):
-			_status_line("⚠ " + problem, warn)
+			_status_line(problem, warn, load(_WARNING_ICON))
 	if Library.plain_gdpatch(info):
-		_status_line("⚠ Made for GDPatch alone, not for AVaSt. It works, but AVaSt can't update it or check what it needs.", Palette.readable(Color(0.72, 0.45, 0.0), _pal))
+		_status_line("Made for GDPatch alone, not for AVaSt. It works, but AVaSt can't update it or check what it needs.", Palette.readable(Color(0.72, 0.45, 0.0), _pal), load(_CAUTION_ICON))
 	var state: String = _core.updater.status.get(id, "")
 	if not state.is_empty() and not state in ["downloading", "installed"]:
 		_status_line(state, warn)
